@@ -473,7 +473,7 @@
 
 <script>
 // ── CONFIG ── Replace these with your deployed Google Apps Script URL
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyqiIIvNOYH07qptC51SWNK5nD3_l-LHBmQOeZJ-XyEON5oo50l16OmWSknQuOBHVx8/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxUPSO16yQ2muhqkR0cnULvlDBju4kyKfn_RnxGNPOYQR0aYT0ra6mSMradd8TgmNUv/exec";
 
 // Fallback data (keep updated)
 const PERIOD_DATES_FB = [
@@ -516,7 +516,12 @@ const PHASES = [
       "Great time to try something new — your brain is primed for novelty.",
       "Your social battery is fuller right now so lean into connection.",
       "Physical activity feels easier and more rewarding in this phase.",
-      "Make the most of the mental clarity — plan, create and organize."
+      "Make the most of the mental clarity — plan, create and organize.",
+      "Your mood and energy are climbing. This is a great time to lean into closeness with Dan — you're likely feeling more open and receptive than usual.",
+      "You're in a naturally warm and connected phase. A spontaneous evening together could feel especially good right now.",
+      "Desire tends to rise alongside your energy this week. It's a great time to be intentional about quality time with Dan.",
+      "Your emotional openness is at a high point — intimacy, both physical and emotional, tends to feel more natural and rewarding now.",
+      "This phase often brings a quiet but real uptick in desire. If the mood strikes, go with it — your body is primed for connection."
     ]
   },
   {
@@ -532,8 +537,13 @@ const PHASES = [
     tips: [
       "Your communication skills are sharpest now — have important conversations.",
       "This is your most fertile window if that's relevant for you.",
-      "Lean into social events, intimacy and anything that lights you up.",
-      "Your body is doing remarkable things — celebrate it."
+      "Your body is doing remarkable things — celebrate it.",
+      "This is your peak window — energy, confidence and desire are all elevated. A spontaneous date night or some extra closeness tonight could be especially rewarding.",
+      "Desire is at its highest point right now. If you've been wanting to connect with Dan, this is the time — your body is fully on board.",
+      "You're at your most magnetic this week. Lean into that energy and let Dan know if you're feeling it.",
+      "This is the phase where intimacy tends to feel the most natural and the most satisfying. Make the most of it.",
+      "Your libido peaks during ovulation — it's completely normal to feel a stronger pull toward closeness and physical connection right now.",
+      "Everything is aligned this week. If the spark is there, don't overthink it — your body is giving you a green light."
     ]
   },
   {
@@ -621,19 +631,14 @@ function getDayTip(phase) {
 async function fetchData() {
   try {
     const url = `${SCRIPT_URL}?action=read&t=${Date.now()}`;
-    console.log("Fetching:", url);
     const res = await fetch(url);
-    const text = await res.text();
-    console.log("Raw response:", text);
-    const json = JSON.parse(text);
-    console.log("Parsed JSON:", json);
-    console.log("Period dates from sheet:", json.periodDates);
+    const json = await res.json();
     return {
       periodDates: (json.periodDates || []).sort(),
       signalDates: (json.signalDates || []).sort()
     };
   } catch(e) {
-    console.warn("Fetch failed, using fallback:", e);
+    console.warn("Using fallback data:", e);
     return {
       periodDates: [...PERIOD_DATES_FB].sort(),
       signalDates: [...SIGNAL_DATES_FB].sort()

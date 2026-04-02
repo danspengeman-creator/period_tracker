@@ -691,10 +691,12 @@ function buildCalendar(periodDates, signalDates, len, offset) {
       return '';
     }
     const cycleDay = (daysSinceLast % len) + 1;
+    const ovulationDay = Math.round(len * PHASES[2].maxPct);
     if (cycleDay <= 5) return 'period';
+    if (cycleDay === ovulationDay) return 'ovulation';
+    if (cycleDay >= ovulationDay - 4 && cycleDay < ovulationDay) return 'fertile';
     const pct = cycleDay / len;
     if (pct <= PHASES[1].maxPct) return '';
-    if (pct <= PHASES[2].maxPct) return 'ovulation';
     if (pct <= PHASES[3].maxPct) return 'luteal';
     return 'pms';
   }

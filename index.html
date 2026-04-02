@@ -288,6 +288,7 @@
     font-weight: 600;
   }
   .cal-day.period    { background: #E8D4EE; color: var(--plum); }
+  .cal-day.follicular { background: #EEF3F8; color: #7A99B8; }
   .cal-day.ovulation { background: var(--rose-lt); color: var(--rose); font-weight: 600; }
   .cal-day.fertile   { background: #FDEAE0; color: var(--amber); }
   .cal-day.luteal    { background: var(--sage-lt); color: var(--sage); }
@@ -696,7 +697,7 @@ function buildCalendar(periodDates, signalDates, len, offset) {
     if (cycleDay === ovulationDay) return 'ovulation';
     if (cycleDay >= ovulationDay - 4 && cycleDay < ovulationDay) return 'fertile';
     const pct = cycleDay / len;
-    if (pct <= PHASES[1].maxPct) return '';
+    if (pct <= PHASES[1].maxPct) return 'follicular';
     if (pct <= PHASES[3].maxPct) return 'luteal';
     return 'pms';
   }
@@ -727,6 +728,7 @@ function buildCalendar(periodDates, signalDates, len, offset) {
   html += `</div>
     <div class="cal-legend">
       <span class="leg-chip" onclick="openPhaseInfo('period')" style="background:#E8D4EE;color:#7B4F8E">🌙 Period</span>
+      <span class="leg-chip" onclick="openPhaseInfo('follicular')" style="background:#EEF3F8;color:#7A99B8">🌸 Follicular</span>
       <span class="leg-chip" onclick="openPhaseInfo('ovulation')" style="background:var(--rose-lt);color:#C45E8A">✨ Ovulation</span>
       <span class="leg-chip" onclick="openPhaseInfo('fertile')" style="background:#FDEAE0;color:#D4845A">🌿 Fertile</span>
       <span class="leg-chip" onclick="openPhaseInfo('luteal')" style="background:var(--sage-lt);color:#5FA67A">🍂 Luteal</span>
@@ -975,6 +977,16 @@ function playSignalChime() {
 
 // ── PHASE INFO ──
 const PHASE_INFO = {
+  follicular: {
+    emoji: '🌸',
+    name: 'Follicular Phase',
+    duration: 'Days 6–9 (approx)',
+    color: '#7A99B8',
+    bg: '#EEF3F8',
+    how: 'Your period has ended and your body is quietly rebuilding. Estrogen begins to rise, energy starts returning and your mood gradually lifts. You may feel a sense of renewal and calm optimism.',
+    physical: 'Increasing energy, improved mood, reduced bloating, returning appetite, clearer skin.',
+    tip: 'A gentle transition phase — good for easing back into routines, light exercise and reconnecting with people.'
+  },
   period: {
     emoji: '🌙',
     name: 'Menstrual (Period)',

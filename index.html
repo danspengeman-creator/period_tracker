@@ -37,15 +37,19 @@
   }
 
   /* ── HEADER ── */
-  @keyframes gradientShift {
-    0%   { background-position: 0% 50%; }
-    50%  { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+  @keyframes hueRotate {
+    0%   { opacity: 1; }
+    33%  { opacity: 0.4; }
+    66%  { opacity: 0.8; }
+    100% { opacity: 1; }
+  }
+  @keyframes hueRotate2 {
+    0%   { opacity: 0.3; }
+    50%  { opacity: 1; }
+    100% { opacity: 0.3; }
   }
   .header {
-    background: linear-gradient(135deg, #7B4F8E, #E8678A, #C45E8A, #9B5FA0, #7B4F8E);
-    background-size: 300% 300%;
-    animation: gradientShift 8s ease infinite;
+    background: #7B4F8E;
     padding: 2.5rem 1.5rem 3.5rem;
     position: relative;
     overflow: hidden;
@@ -53,20 +57,21 @@
   .header::before {
     content: '';
     position: absolute;
-    top: -40px; right: -40px;
-    width: 160px; height: 160px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.08);
+    inset: 0;
+    background: linear-gradient(160deg, #9B5FA0 0%, #E8678A 100%);
+    animation: hueRotate 6s ease-in-out infinite;
+    z-index: 0;
   }
   .header::after {
     content: '';
     position: absolute;
-    bottom: -30px; left: 30px;
-    width: 100px; height: 100px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.06);
+    inset: 0;
+    background: linear-gradient(200deg, #C45E8A 0%, #7B4F8E 60%, #E8678A 100%);
+    animation: hueRotate2 6s ease-in-out infinite;
+    z-index: 0;
   }
-  .header-inner { position: relative; z-index: 1; }
+
+  .header-inner { position: relative; z-index: 2; }
   .app-name { display: none; }
   .header-greeting {
     font-family: 'DM Serif Display', serif;

@@ -74,7 +74,7 @@
   .cal-day.luteal     { background:var(--sage-lt); color:var(--sage); }
   .cal-day.pms        { background:var(--blue-lt); color:var(--blue); }
   .cal-day.signal::after   { content:'💜'; font-size:9px; position:absolute; bottom:2px; right:2px; }
-  .cal-day.symptom::before { content:'📝'; font-size:8px; position:absolute; top:1px; left:2px; line-height:1; }
+  .cal-day.symptom { position:relative; }
   .cal-legend { display:flex; flex-wrap:wrap; gap:7px; margin-top:0.85rem; justify-content:center; }
   .leg-chip   { font-size:12px; font-weight:500; padding:5px 11px; border-radius:100px; cursor:pointer; transition:transform 0.1s,opacity 0.1s; user-select:none; }
   .leg-chip:active { transform:scale(0.94); opacity:0.8; }
@@ -225,7 +225,7 @@ let calOffset=0, appState=null;
 const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
 const DOWS=["Su","Mo","Tu","We","Th","Fr","Sa"];
 
-function buildCalendar(periodDates,signalDates,symptomDates,len,offset) {
+function buildCalendar(periodDates,signalDates,symptomDates,feelingsMap,len,offset) {
   const today=new Date();
   const dt=new Date(today.getFullYear(),today.getMonth()+offset,1);
   const month=dt.getMonth(), year=dt.getFullYear();
@@ -234,6 +234,19 @@ function buildCalendar(periodDates,signalDates,symptomDates,len,offset) {
   const lastPeriod=parseISOLocal(periodDates[periodDates.length-1]);
   const signalSet=new Set(signalDates);
   const symptomSet=new Set(symptomDates);
+  const FEELING_PRIORITY = ['Horny','Affectionate','Bloated','Cramping','Emotional','Tired','Happy'];
+  function getSymptomEmoji(iso) {
+    const raw = feelingsMap && feelingsMap[iso];
+    if (!raw) return '📝';
+    const logged = raw.split(',').map(s => s.trim());
+    for (const f of FEELING_PRIORITY) {
+      if (logged.includes(f)) {
+        const match = [{emoji:'🔥',label:'Horny'},{emoji:'🥰',label:'Affectionate'},{emoji:'🫠',label:'Bloated'},{emoji:'🤕',label:'Cramping'},{emoji:'😢',label:'Emotional'},{emoji:'😴',label:'Tired'},{emoji:'😊',label:'Happy'}].find(x=>x.label===f);
+        if (match) return match.emoji;
+      }
+    }
+    return '📝';
+  }
 
   function getDayClass(iso) {
     const d=parseISOLocal(iso);
@@ -259,7 +272,8 @@ function buildCalendar(periodDates,signalDates,symptomDates,len,offset) {
   for (let day=1;day<=daysInMonth;day++) {
     const iso=year+'-'+String(month+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
     const pc=getDayClass(iso), it=iso===todayISO?' today':'', sg=signalSet.has(iso)?' signal':'', sy=symptomSet.has(iso)?' symptom':'';
-    h+='<div class="cal-day'+(pc?' '+pc:'')+it+sg+sy+'" onclick="tapDay(\''+iso+'\')">' +day+'</div>';
+    const symEmoji=symptomSet.has(iso)?'<span style="font-size:8px;position:absolute;top:1px;left:2px;line-height:1">'+getSymptomEmoji(iso)+'</span>':'';
+    h+='<div class="cal-day'+(pc?' '+pc:'')+it+sg+sy+'" onclick="tapDay(\''+iso+'\')">'+day+symEmoji+'</div>';
   }
   h+='</div><div class="cal-legend">'
     +'<span class="leg-chip" onclick="openPhaseInfo(\'period\')"     style="background:#E8D4EE;color:#7B4F8E">🌙 Period</span>'
@@ -274,7 +288,7 @@ function buildCalendar(periodDates,signalDates,symptomDates,len,offset) {
 
 function changeMonth(dir) {
   calOffset+=dir;
-  document.getElementById('calContainer').innerHTML=buildCalendar(appState.periodDates,appState.signalDates,appState.symptomDates,appState.len,calOffset);
+  document.getElementById('calContainer').innerHTML=buildCalendar(appState.periodDates,appState.signalDates,appState.symptomDates,appState.feelingsMap,appState.len,calOffset);
 }
 
 function render(periodDates,signalDates,symptomDates,feelingsMap) {
@@ -352,7 +366,7 @@ function render(periodDates,signalDates,symptomDates,feelingsMap) {
     +'</div></div>'
 
     +'<div class="section"><div class="section-title">Your calendar</div>'
-    +'<div class="cal-wrap"><div id="calContainer">'+buildCalendar(periodDates,signalDates,symptomDates,len,0)+'</div></div></div>'
+    +'<div class="cal-wrap"><div id="calContainer">'+buildCalendar(periodDates,signalDates,symptomDates,feelingsMap,len,0)+'</div></div></div>'
 
     +'<button class="log-btn" onclick="openLog()">🩸 Log period start</button>'
     +'<button class="log-btn" onclick="openSymptom()" style="margin-top:0.75rem;background:linear-gradient(135deg,#5FA67A,#3d8a5e);">📝 Log a symptom</button>'

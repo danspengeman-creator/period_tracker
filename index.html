@@ -352,6 +352,60 @@ function getPreviousFeelings(phaseName, feelingsMap, periodDates, len) {
     + '</div>';
 }
 
+
+// ── CYCLE IRREGULARITY DETECTION ──
+function getCycleIrregularity(periodDates) {
+  if (periodDates.length < 4) return null; // need at least 3 cycles
+
+  const lengths = [];
+  for (let i = 1; i < periodDates.length; i++) {
+    const diff = Math.floor((parseISOLocal(periodDates[i]) - parseISOLocal(periodDates[i-1])) / 86400000);
+    if (diff > 14 && diff < 60) lengths.push(diff);
+  }
+  if (lengths.length < 3) return null;
+
+  const avg = lengths.reduce((a,b) => a+b, 0) / lengths.length;
+  const variance = lengths.reduce((sum, l) => sum + Math.pow(l - avg, 2), 0) / lengths.length;
+  const stdDev = Math.sqrt(variance);
+  const hasShort = lengths.some(l => l < 21);
+  const hasLong  = lengths.some(l => l > 35);
+  const isIrregular = stdDev > 7 || hasShort || hasLong;
+
+  if (!isIrregular) return null;
+
+  const reasons = [];
+  if (hasShort) reasons.push('one or more cycles shorter than 21 days');
+  if (hasLong)  reasons.push('one or more cycles longer than 35 days');
+  if (stdDev > 7) reasons.push('high variation between cycles (' + Math.round(stdDev) + ' day standard deviation)');
+
+  return { stdDev: Math.round(stdDev), hasShort, hasLong, reasons };
+}
+
+function getIrregularityCard(irregularity) {
+  if (!irregularity) return '';
+  return '<div class="insight-card" style="border:1px solid #F7C5D2">'
+    + '<div class="insight-header">'
+    + '<div class="insight-icon" style="background:#FEF0F4;font-size:1.2rem">📊</div>'
+    + '<div><div class="insight-title" style="color:var(--rose)">Cycle irregularity detected</div>'
+    + '<div class="insight-sub">Based on your logged period history</div></div></div>'
+    + '<div class="insight-body" style="margin-bottom:0.75rem">Your cycle data shows some variation that falls outside the typical 21–35 day range. This was detected based on: <strong>'
+    + irregularity.reasons.join('; ') + '.</strong></div>'
+    + '<div style="background:var(--mist);border-radius:12px;padding:0.85rem 1rem;margin-bottom:0.75rem">'
+    + '<div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--ink-lt);margin-bottom:6px">Common causes</div>'
+    + '<div style="font-size:13px;color:var(--ink-mid);line-height:1.65">'
+    + '• Stress or significant life changes<br>'
+    + '• Hormonal imbalances (estrogen, progesterone, thyroid)<br>'
+    + '• Significant weight changes or intense exercise<br>'
+    + '• Polycystic ovary syndrome (PCOS)<br>'
+    + '• Perimenopause or approaching menopause<br>'
+    + '• Travel or disrupted sleep patterns<br>'
+    + '• Illness or recent illness recovery'
+    + '</div></div>'
+    + '<div style="font-size:12px;color:var(--ink-lt);line-height:1.5;font-style:italic">'
+    + 'This is informational, not medical advice. If irregularity persists, it&#39;s worth mentioning to your doctor.'
+    + '</div></div>';
+}
+
 function render(periodDates,signalDates,symptomDates,feelingsMap,sexDates) {
   const today=new Date();
   const len=avgCycleLen(periodDates);
@@ -374,6 +428,9 @@ function render(periodDates,signalDates,symptomDates,feelingsMap,sexDates) {
   // Schedule overdue log reminders if period is 3-7 days late
   const rawDaysOverdue = rawDaysSince - len;
   if (rawDaysOverdue >= 3 && rawDaysOverdue <= 7 && !onPeriod) scheduleOverdueReminders(rawDaysOverdue);
+
+  // Irregularity
+  const irregularity = getCycleIrregularity(periodDates);
 
   // Moon
   const moon=getMoonPhase(today);
@@ -416,7 +473,9 @@ function render(periodDates,signalDates,symptomDates,feelingsMap,sexDates) {
     +'<div class="insight-header"><div class="insight-icon" style="background:#FFF8E8;">💡</div>'
     +'<div><div class="insight-title">Today\'s tip</div><div class="insight-sub">Cycle-matched advice</div></div></div>'
     +'<div class="insight-body">'+tip+'</div>'
-    +'</div></div>'
+    +'</div>'
+    +getIrregularityCard(irregularity)
+    +'</div>'
 
     +'<div class="section"><div class="section-title">Tonight\'s moon</div>'
     +'<div class="insight-card">'

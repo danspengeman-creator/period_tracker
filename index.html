@@ -297,6 +297,61 @@ function changeMonth(dir) {
   document.getElementById('calContainer').innerHTML=buildCalendar(appState.periodDates,appState.signalDates,appState.symptomDates,appState.feelingsMap,appState.sexDates,appState.len,calOffset);
 }
 
+
+// ── PREVIOUS FEELINGS FOR PHASE ──
+function getPreviousFeelings(phaseName, feelingsMap, periodDates, len) {
+  if (!feelingsMap || !Object.keys(feelingsMap).length) return '';
+
+  // Map phase name to cycle day range
+  const phaseRanges = {
+    'Menstrual':   [1, Math.round(len * 0.18)],
+    'Follicular':  [Math.round(len * 0.18) + 1, Math.round(len * 0.46)],
+    'Ovulation':   [Math.round(len * 0.46) + 1, Math.round(len * 0.57)],
+    'Luteal':      [Math.round(len * 0.57) + 1, Math.round(len * 0.86)],
+    'Late Luteal': [Math.round(len * 0.86) + 1, len]
+  };
+  const range = phaseRanges[phaseName];
+  if (!range) return '';
+
+  // Count feeling frequency for this phase across all logged entries
+  const counts = {};
+  const lastDate = parseISOLocal(periodDates[periodDates.length - 1]);
+
+  for (const [dateStr, feelings] of Object.entries(feelingsMap)) {
+    const d = parseISOLocal(dateStr);
+    if (!d) continue;
+    const daysSince = Math.floor((d - lastDate) / 86400000);
+    const cycleDay = ((daysSince % len) + len) % len + 1;
+    if (cycleDay >= range[0] && cycleDay <= range[1]) {
+      feelings.split(',').map(f => f.trim()).filter(Boolean).forEach(f => {
+        counts[f] = (counts[f] || 0) + 1;
+      });
+    }
+  }
+
+  if (!Object.keys(counts).length) return '';
+
+  // Get top 3 most reported feelings
+  const top = Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([f]) => f);
+
+  const FEELING_EMOJIS = {
+    'Happy':'😊','Energized':'⚡','Calm':'😌','Affectionate':'🥰','Horny':'🔥',
+    'Neutral':'😐','Tired':'😴','Foggy / Low focus':'🧠','Stressed':'😮‍💨',
+    'Emotional':'😢','Irritable':'😠','Cramping':'🤕','Bloated':'🫠',
+    'Headachey':'🤯','Breast Tenderness':'🎀','Nauseous':'🤢'
+  };
+
+  const formatted = top.map(f => (FEELING_EMOJIS[f] || '') + ' ' + f).join(', ');
+
+  return '<div style="margin-top:0.85rem;padding:0.75rem 1rem;background:var(--mist);border-radius:12px;border:1px solid var(--border)">'
+    + '<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--ink-lt);margin-bottom:4px">You&#39;ve previously reported</div>'
+    + '<div style="font-size:13px;color:var(--ink-mid);line-height:1.5">' + formatted + ' during this phase.</div>'
+    + '</div>';
+}
+
 function render(periodDates,signalDates,symptomDates,feelingsMap,sexDates) {
   const today=new Date();
   const len=avgCycleLen(periodDates);
@@ -355,6 +410,7 @@ function render(periodDates,signalDates,symptomDates,feelingsMap,sexDates) {
     +'<div><div class="insight-title">'+phase.name+' phase</div><div class="insight-sub">'+phase.tagline+'</div></div></div>'
     +'<div class="insight-body">'+phase.body+'</div>'
     +'<div class="chips">'+phase.symptoms.map(s=>'<span class="chip">'+s+'</span>').join('')+'</div>'
+    +getPreviousFeelings(phase.name, feelingsMap, periodDates, len)
     +'</div>'
     +'<div class="insight-card">'
     +'<div class="insight-header"><div class="insight-icon" style="background:#FFF8E8;">💡</div>'
@@ -426,7 +482,22 @@ function tapDay(iso) {
 
   showModal(dateStr, phase.emoji + ' Day ' + cycleDay + ' of ' + len + ' — ' + phase.name, body);
 }
-function openLog()   { openLogForDate(toISO(new Date())); }
+function openLog() {
+  const today = new Date();
+  const days = [];
+  for (let i = 0; i < 3; i++) {
+    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+    const iso = toISO(d);
+    const label = i === 0 ? 'Today' : i === 1 ? 'Yesterday' :
+      d.toLocaleDateString('en-US', { weekday:'long', month:'short', day:'numeric' });
+    days.push({ iso, label });
+  }
+  showModal('Log period start', 'When did it start?',
+    days.map(d =>
+      '<button class="mbtn" onclick="openLogForDate(\''+d.iso+'\''+')" style="background:var(--mist);border:1px solid var(--border);color:var(--ink);text-align:left;padding:13px 16px;">'
+      + d.label + '</button>'
+    ).join('') + '<button class="mbtn cancel" onclick="closeModal()" style="margin-top:4px">Cancel</button>');
+}
 
 function openLogForDate(iso) {
   const d=parseISOLocal(iso);

@@ -506,6 +506,10 @@ function openSymptom(isoOverride) {
       await writeEntry('symptom', iso+'|'+encodeURIComponent(feelings));
       const wantsSignal = selected.has('Affectionate') || selected.has('Horny');
       if (wantsSignal) {
+        // Refresh data silently in background without closing modal
+        fetchData().then(({periodDates,signalDates,symptomDates,feelingsMap})=>{
+          appState={...appState,periodDates,signalDates,symptomDates,feelingsMap:feelingsMap||{}};
+        });
         modalMsg('Feelings logged! 📝', 'ok');
         const btnsEl = document.getElementById('modal-btns');
         if (btnsEl) {

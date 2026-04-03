@@ -523,7 +523,7 @@ function openSymptom(isoOverride) {
       await writeEntry('symptom', iso+'|'+encodeURIComponent(feelings));
       msg.textContent='Logged! How you feel matters.';
       msg.className='modal-msg ok';
-      setTimeout(()=>{ document.getElementById('modal').classList.remove('open'); setTimeout(()=>{ window.init(); }, 350); }, 1500);
+      setTimeout(()=>{ window.init(); }, 1500);
     } catch(e) {
       msg.textContent='Could not save. Try again.';
       msg.className='modal-msg err';
@@ -554,7 +554,7 @@ async function submitLog(action,iso) {
     msg.textContent=action==='period'?'Period logged. The calendar will update.':'Signal sent to Dan. 💜';
     msg.className='modal-msg ok';
     if (action==='signal') playSignalChime();
-    setTimeout(()=>{ document.getElementById('modal').classList.remove('open'); setTimeout(()=>{ init(); }, 350); },1500);
+    setTimeout(()=>{ init(); },1500);
   } catch(e) {
     msg.textContent='Could not save. Check your connection and try again.';
     msg.className='modal-msg err';
@@ -581,14 +581,12 @@ function playSignalChime() {
 
 async function init() {
   calOffset=0;
-  // Fully reset modal state
   const modal = document.getElementById('modal');
-  modal.classList.remove('open');
-  modal.removeAttribute('style');
-  // Reset app content
+  modal.className = 'modal-overlay'; // strip open class completely
   document.getElementById('app').innerHTML='<div class="loading-wrap"><div class="spinner"></div>Loading your cycle data...</div>';
   const {periodDates,signalDates,symptomDates,feelingsMap}=await fetchData();
   render(periodDates,signalDates,symptomDates,feelingsMap);
+  modal.className = 'modal-overlay'; // strip again after render in case anything re-added it
 }
 init();
 </script>

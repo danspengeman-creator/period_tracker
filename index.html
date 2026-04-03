@@ -490,7 +490,7 @@ function openSymptom(isoOverride) {
   const iso = isoOverride || toISO(new Date());
   let selected = new Set();
 
-  function render() {
+  function renderFeelings() {
     document.getElementById('modal-btns').innerHTML =
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
       + FEELINGS.map(f => {
@@ -511,7 +511,7 @@ function openSymptom(isoOverride) {
 
   window.toggleFeeling = function(label) {
     if (selected.has(label)) selected.delete(label); else selected.add(label);
-    render();
+    renderFeelings();
   };
   window.submitSymptom = async function(iso) {
     const feelings = Array.from(selected).join(', ');
@@ -535,7 +535,7 @@ function openSymptom(isoOverride) {
   document.getElementById('modal-sub').textContent = 'Select all that apply.';
   document.getElementById('modal-msg').textContent = '';
   document.getElementById('modal-msg').className = 'modal-msg';
-  render();
+  renderFeelings();
   document.getElementById('modal').classList.add('open');
 }
 

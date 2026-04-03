@@ -451,18 +451,22 @@ function openPhaseInfo(key) {
 
 
 const FEELINGS = [
-  { emoji:'😊', label:'Happy'          },
-  { emoji:'⚡', label:'Energized'      },
-  { emoji:'😌', label:'Calm'           },
-  { emoji:'🥰', label:'Affectionate'   },
-  { emoji:'😐', label:'Neutral'        },
-  { emoji:'😴', label:'Tired'          },
+  { emoji:'😊', label:'Happy'             },
+  { emoji:'⚡', label:'Energized'         },
+  { emoji:'😌', label:'Calm'              },
+  { emoji:'🥰', label:'Affectionate'      },
+  { emoji:'🔥', label:'Horny'             },
+  { emoji:'😐', label:'Neutral'           },
+  { emoji:'😴', label:'Tired'             },
   { emoji:'🧠', label:'Foggy / Low focus' },
   { emoji:'😮‍💨', label:'Stressed'  },
-  { emoji:'😢', label:'Emotional'      },
-  { emoji:'😠', label:'Irritable'      },
-  { emoji:'🤕', label:'Cramping'       },
-  { emoji:'🤢', label:'Nauseous'       }
+  { emoji:'😢', label:'Emotional'         },
+  { emoji:'😠', label:'Irritable'         },
+  { emoji:'🤕', label:'Cramping'          },
+  { emoji:'🫠', label:'Bloated'           },
+  { emoji:'🤯', label:'Headachey'         },
+  { emoji:'🎀', label:'Breast Tenderness' },
+  { emoji:'🤢', label:'Nauseous'          }
 ];
 
 function openSymptomForDate(iso) { openSymptom(iso); }
@@ -476,12 +480,12 @@ function openSymptom(isoOverride) {
       + FEELINGS.map(f => {
           const sel = selected.has(f.label);
           return '<button onclick="toggleFeeling(\''+f.label+'\')" style="'
-            +'padding:12px 8px;border-radius:14px;border:'+(sel?'2px solid var(--plum)':'1px solid var(--border)')
+            +'padding:14px 8px;border-radius:14px;border:'+(sel?'2px solid var(--plum)':'1px solid var(--border)')
             +';background:'+(sel?'#F0E6F7':'var(--mist)')
             +';color:'+(sel?'var(--plum)':'var(--ink-mid)')
-            +';font-family:\'DM Sans\',sans-serif;font-size:14px;font-weight:'+(sel?'600':'400')
+            +';font-family:\'DM Sans\',sans-serif;font-size:18px;font-weight:'+(sel?'600':'400')
             +';cursor:pointer;text-align:center;transition:all 0.1s;">'
-            +f.emoji+'<br><span style="font-size:12px">'+f.label+'</span></button>';
+            +f.emoji+'<br><span style="font-size:13px">'+f.label+'</span></button>';
         }).join('')
       + '</div>'
       + '<button class="mbtn primary" onclick="submitSymptom(\''+iso+'\')" '+(selected.size===0?'style="opacity:0.4;pointer-events:none"':'')

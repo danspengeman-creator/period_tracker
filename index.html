@@ -581,12 +581,16 @@ function playSignalChime() {
 
 async function init() {
   calOffset=0;
+  // Remove modal from DOM entirely during re-render
   const modal = document.getElementById('modal');
-  modal.className = 'modal-overlay'; // strip open class completely
+  const parent = modal.parentNode;
+  parent.removeChild(modal);
+  modal.className = 'modal-overlay';
+  modal.style.cssText = '';
   document.getElementById('app').innerHTML='<div class="loading-wrap"><div class="spinner"></div>Loading your cycle data...</div>';
   const {periodDates,signalDates,symptomDates,feelingsMap}=await fetchData();
   render(periodDates,signalDates,symptomDates,feelingsMap);
-  modal.className = 'modal-overlay'; // strip again after render in case anything re-added it
+  parent.appendChild(modal);
 }
 init();
 </script>

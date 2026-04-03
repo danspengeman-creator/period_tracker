@@ -523,7 +523,7 @@ function openSymptom(isoOverride) {
       await writeEntry('symptom', iso+'|'+encodeURIComponent(feelings));
       msg.textContent='Logged! How you feel matters.';
       msg.className='modal-msg ok';
-      setTimeout(()=>{ closeModal(); window.init(); }, 1500);
+      setTimeout(()=>{ document.getElementById('modal').classList.remove('open'); setTimeout(()=>{ window.init(); }, 350); }, 1500);
     } catch(e) {
       msg.textContent='Could not save. Try again.';
       msg.className='modal-msg err';
@@ -554,7 +554,7 @@ async function submitLog(action,iso) {
     msg.textContent=action==='period'?'Period logged. The calendar will update.':'Signal sent to Dan. 💜';
     msg.className='modal-msg ok';
     if (action==='signal') playSignalChime();
-    setTimeout(()=>{closeModal();init();},1500);
+    setTimeout(()=>{ document.getElementById('modal').classList.remove('open'); setTimeout(()=>{ init(); }, 350); },1500);
   } catch(e) {
     msg.textContent='Could not save. Check your connection and try again.';
     msg.className='modal-msg err';

@@ -504,8 +504,23 @@ function openSymptom(isoOverride) {
     modalMsg('Saving...');
     try {
       await writeEntry('symptom', iso+'|'+encodeURIComponent(feelings));
-      modalMsg('Logged! How you feel matters.','ok');
-      setTimeout(()=>{ closeModal(); init(); }, 1500);
+      const wantsSignal = selected.has('Affectionate') || selected.has('Horny');
+      if (wantsSignal) {
+        modalMsg('Feelings logged! 📝', 'ok');
+        const btnsEl = document.getElementById('modal-btns');
+        if (btnsEl) {
+          btnsEl.style.opacity='1'; btnsEl.style.pointerEvents='auto';
+          btnsEl.innerHTML =
+            '<div style="background:#F5F0FF;border-radius:12px;padding:0.85rem 1rem;margin-bottom:10px;font-size:14px;color:var(--plum);line-height:1.5">'
+            + '💜 Want to let Dan know tonight works?'
+            + '</div>'
+            + '<button class="mbtn primary" onclick="closeModal();openSignal()">💜 Yes, send Dan a signal</button>'
+            + '<button class="mbtn cancel" onclick="closeModal();init()">No thanks</button>';
+        }
+      } else {
+        modalMsg('Logged! How you feel matters.','ok');
+        setTimeout(()=>{ closeModal(); init(); }, 1500);
+      }
     } catch(e) {
       modalMsg('Could not save. Try again.','err');
       if(btns){btns.style.opacity='1';btns.style.pointerEvents='auto';}

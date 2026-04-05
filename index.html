@@ -179,7 +179,18 @@ const PHASES = [
     greeting:"Almost there, Michelle", tagline:"PMS territory — be extra gentle with yourself.",
     body:"Hormone levels are dropping ahead of your period. It's common to feel more sensitive, irritable or low. Your body is doing a lot of internal work right now — this phase passes soon.",
     symptoms:["Irritability","Anxiety","Bloating","Breakouts","Sleep disruption"],
-    tips:["Magnesium can help ease PMS symptoms — leafy greens and dark chocolate.","Low-intensity movement like yoga or walking may lift your mood.","Extra sleep and avoiding overstimulation can make a real difference.","Be patient with yourself — these feelings are temporary and real."] }
+    tips:[
+      "Magnesium can help ease PMS symptoms — leafy greens and dark chocolate.",
+      "Low-intensity movement like yoga or walking may lift your mood.",
+      "Extra sleep and avoiding overstimulation can make a real difference.",
+      "Be patient with yourself — these feelings are temporary and real.",
+      "PMS symptoms can feel intense right now — but intimacy with Dan can actually help. Orgasms release endorphins and oxytocin that naturally ease cramping and lift your mood.",
+      "If you're feeling irritable or low, physical closeness with Dan might be the last thing on your mind — but it's one of the best natural mood boosters available to you right now.",
+      "Sex during PMS increases serotonin and reduces cortisol. Even if desire feels low, initiating with Dan could leave you feeling noticeably better afterward.",
+      "Your body is winding down but it still craves connection. A gentle, intimate evening with Dan can ease tension and help you sleep better too.",
+      "Oxytocin released during intimacy is a natural painkiller. If cramps or tension are building, closeness with Dan is worth trying before reaching for anything else.",
+      "PMS can make you want to withdraw — but research shows orgasms can reduce the severity of cramps and emotional lows. Give Dan a nudge tonight."
+    ] }
 ];
 
 const PHASE_SEASON_NAMES = {
@@ -587,7 +598,7 @@ function render(periodDates,signalDates,symptomDates,feelingsMap,sexDates) {
     +'<div class="header-greeting">'+phase.emoji+' <em>'+phase.greeting+'</em></div>'
     +'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px">'
     +'<div class="phase-pill"><div class="phase-dot"></div>Day '+dayInCycle+' of '+len+' &middot; '+phase.name+' phase</div>'
-    +((onPeriod||nextPeriodDay<=3)?'<a href="https://a.co/d/0iNR0SiO" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.35);border-radius:100px;padding:5px 11px;font-size:12px;font-weight:500;color:#fff;text-decoration:none;white-space:nowrap">🛒 Pads</a>':'')
+    +((onPeriod||nextPeriodDay<=3)?'<a href="https://a.co/d/0iNR0SiO" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:#FF9900;border:1px solid #e68a00;border-radius:100px;padding:5px 11px;font-size:12px;font-weight:600;color:#146EB4;text-decoration:none;white-space:nowrap">🛒 Pads</a>':'')
     +'</div>'
     +'</div></div>'
 

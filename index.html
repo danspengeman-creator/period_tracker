@@ -777,9 +777,27 @@ async function submitLog(action,iso) {
   modalMsg(action==='signal'?"Sending. He's going to love it! 💜":'Saving...');
   try {
     await writeEntry(action,iso);
-    modalMsg(action==='period'?'Period logged. The calendar will update.':'Signal sent to Dan. 💜','ok');
-    if(action==='signal') playSignalChime();
-    setTimeout(()=>{ closeModal(); init(); },1500);
+    if(action==='signal') {
+      modalMsg('Signal sent to Dan. 💜','ok');
+      playSignalChime();
+      setTimeout(()=>{ closeModal(); init(); },1500);
+    } else if(action==='period') {
+      // Show supplies check after logging period
+      modalMsg('Period logged. 🩸','ok');
+      const btnsEl = document.getElementById('modal-btns');
+      if(btnsEl) {
+        btnsEl.style.opacity='1'; btnsEl.style.pointerEvents='auto';
+        btnsEl.innerHTML =
+          '<div style="background:#FEF0F4;border-radius:12px;padding:0.85rem 1rem;margin-bottom:10px;font-size:14px;color:var(--rose);line-height:1.5">'
+          + '🛍 Are you covered for feminine products?'
+          + '</div>'
+          + '<a href="https://a.co/d/0iNR0SiO" target="_blank" rel="noopener" class="mbtn primary" style="text-decoration:none;text-align:center;display:block">'
+          + '🛒 Order pads on Amazon</a>'
+          + '<button class="mbtn cancel" onclick="closeModal();init()">I&#39;m all set</button>';
+      }
+    } else {
+      setTimeout(()=>{ closeModal(); init(); },1500);
+    }
   } catch(e) {
     modalMsg('Could not save. Check your connection and try again.','err');
     if(btns){btns.style.opacity='1';btns.style.pointerEvents='auto';}

@@ -637,7 +637,7 @@ function render(periodDates,signalDates,symptomDates,feelingsMap,sexDates) {
 
     +'<div class="section" id="weatherSection"><div class="section-title">Today\'s weather</div>'
     +'<div id="weatherCard"><div class="insight-card" style="text-align:center;color:var(--ink-lt);font-size:13px">Fetching weather...</div></div></div>'
-    +'<div class="section"><div class="section-title">Your calendar</div>'
+
     +'<div class="section"><div class="section-title">Tonight\'s moon</div>'
     +'<div class="insight-card">'
     +'<div class="insight-header"><div class="insight-icon" style="background:#F5F0FF;font-size:1.5rem">'+moon.emoji+'</div>'
@@ -647,8 +647,6 @@ function render(periodDates,signalDates,symptomDates,feelingsMap,sexDates) {
     +moonCycleHtml
     +'</div></div>'
 
-    +'<div class="section" id="weatherSection"><div class="section-title">Today\'s weather</div>'
-    +'<div id="weatherCard"><div class="insight-card" style="text-align:center;color:var(--ink-lt);font-size:13px">Fetching weather...</div></div></div>'
     +'<div class="section"><div class="section-title">Your calendar</div>'
     +'<div class="cal-wrap"><div id="calContainer">'+buildCalendar(periodDates,signalDates,symptomDates,feelingsMap,sexDates,len,0)+'</div></div></div>'
 

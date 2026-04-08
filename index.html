@@ -1061,7 +1061,7 @@ function haptic(style) {
 
 
 // ── WEATHER ──
-const OWM_KEY = '6be68d479c99aafddb4ceeeaf83c0dfd';
+const OWM_KEY = 'db1fa67edb54206cc12ea2a3d7256b2e';
 
 async function fetchWeather() {
   return new Promise((resolve) => {
@@ -1073,6 +1073,7 @@ async function fetchWeather() {
           const url = 'https://api.openweathermap.org/data/2.5/weather?lat=' + lat + '&lon=' + lon + '&units=imperial&appid=' + OWM_KEY;
           const res = await fetch(url);
           const data = await res.json();
+          if (data.cod && data.cod !== 200) { resolve(null); return; }
           resolve({
             temp:     Math.round(data.main.temp),
             feels:    Math.round(data.main.feels_like),
@@ -1082,10 +1083,10 @@ async function fetchWeather() {
             city:     data.name,
             wind:     Math.round(data.wind.speed)
           });
-        } catch(e) { resolve(null); }
+        } catch(e) { console.warn('Weather fetch error:', e); resolve(null); }
       },
-      () => resolve(null),
-      { timeout: 8000 }
+      (err) => { console.warn('Geolocation error:', err); resolve(null); },
+      { timeout: 10000 }
     );
   });
 }

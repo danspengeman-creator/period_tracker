@@ -406,7 +406,7 @@ function getPreviousFeelings(phaseName, feelingsMap, periodDates, len) {
     'Happy':'😊','Energized':'⚡','Calm':'😌','Affectionate':'🥰','Horny':'🔥',
     'Neutral':'😐','Tired':'😴','Foggy / Low focus':'🧠','Stressed':'😮‍💨',
     'Emotional':'😢','Irritable':'😠','Cramping':'🤕','Bloated':'🫠',
-    'Headachey':'🤯','Breast Tenderness':'🎀','Nauseous':'🤢'
+    'Headachey':'🤯','Breast Tenderness':'🎀','Lower Back Pain':'🔩','Nauseous':'🤢','Stomach Issues':'🫄'
   };
 
   const formatted = top.map(f => (FEELING_EMOJIS[f] || '') + ' ' + f).join(', ');
@@ -524,7 +524,7 @@ function buildMonthlySummary(periodDates, sexDates, signalDates, feelingsMap, le
     'Happy':'😊','Energized':'⚡','Calm':'😌','Affectionate':'🥰','Horny':'🔥',
     'Neutral':'😐','Tired':'😴','Foggy / Low focus':'🧠','Stressed':'😮‍💨',
     'Emotional':'😢','Irritable':'😠','Cramping':'🤕','Bloated':'🫠',
-    'Headachey':'🤯','Breast Tenderness':'🎀','Nauseous':'🤢'
+    'Headachey':'🤯','Breast Tenderness':'🎀','Lower Back Pain':'🔩','Nauseous':'🤢','Stomach Issues':'🫄'
   };
 
   let summary = 'Your last cycle was <strong>' + lastCycleLen + ' days</strong>.';
@@ -786,13 +786,24 @@ const FEELINGS = [
   { emoji:'🫠', label:'Bloated'           },
   { emoji:'🤯', label:'Headachey'         },
   { emoji:'🎀', label:'Breast Tenderness' },
-  { emoji:'🤢', label:'Nauseous'          }
+  { emoji:'🔩', label:'Lower Back Pain'   },
+  { emoji:'🤢', label:'Nauseous'          },
+  { emoji:'🫄', label:'Stomach Issues'    }
 ];
 
 function openSymptomForDate(iso) { openSymptom(iso); }
 function openSymptom(isoOverride) {
   const iso = isoOverride || toISO(new Date());
   let selected = new Set();
+  let customNote = '';
+
+  window.openCustomNote = function() {
+    const input = prompt('Add a note for today:', customNote);
+    if (input !== null) {
+      customNote = input.trim();
+      renderFeelings();
+    }
+  };
 
   function renderFeelings() {
     document.getElementById('modal-btns').innerHTML =
@@ -808,6 +819,7 @@ function openSymptom(isoOverride) {
             +f.emoji+'<br><span style="font-size:13px">'+f.label+'</span></button>';
         }).join('')
       + '</div>'
+      + '<button onclick="openCustomNote()" style="width:100%;padding:13px 8px;border-radius:14px;border:1px solid var(--border);background:var(--mist);color:var(--ink-mid);font-family:\'DM Sans\',sans-serif;font-size:14px;cursor:pointer;text-align:center;margin-bottom:0;display:block">'+(customNote?'📝 Note: '+customNote:'📝 Add a custom note')+'</button>'
       + '<button class="mbtn primary" onclick="submitSymptom(\''+iso+'\')" '+(selected.size===0?'style="opacity:0.4;pointer-events:none"':'')
       +'>📝 Save '+(selected.size>0?selected.size+' feeling'+(selected.size>1?'s':''):'feelings')+'</button>'
       + '<button class="mbtn cancel" onclick="closeModal()" style="margin-top:6px">Cancel</button>';
@@ -823,7 +835,8 @@ function openSymptom(isoOverride) {
     if(btns){btns.style.opacity='0.5';btns.style.pointerEvents='none';}
     modalMsg('Saving...');
     try {
-      await writeEntry('symptom', iso+'|'+encodeURIComponent(feelings));
+      const fullEntry = feelings + (customNote ? ' | Note: ' + customNote : '');
+      await writeEntry('symptom', iso+'|'+encodeURIComponent(fullEntry));
       const wantsSignal = selected.has('Affectionate') || selected.has('Horny');
       if (wantsSignal) {
         // Refresh data silently in background without closing modal

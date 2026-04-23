@@ -322,7 +322,7 @@ function buildCalendar(periodDates,signalDates,symptomDates,feelingsMap,sexDates
     const d=parseISOLocal(iso);
     const daysSinceLast=Math.floor((d-lastPeriod)/86400000);
     if (daysSinceLast<0) { for (const pd of periodDates) { const p=parseISOLocal(pd); const diff=Math.floor((d-p)/86400000); if(diff>=0&&diff<=4) return 'period'; } return 'follicular'; }
-    const cycleDay=(daysSinceLast%len)+1;
+    const cycleDay=Math.min(daysSinceLast+1, len);
     const ovulationDay=Math.round(len*PHASES[2].maxPct);
     if (cycleDay<=5) return 'period';
     if (cycleDay>=ovulationDay-2&&cycleDay<=ovulationDay) return 'ovulation'; // 3-day ovulation window
@@ -561,7 +561,8 @@ function render(periodDates,signalDates,symptomDates,feelingsMap,sexDates) {
   const len=avgCycleLen(periodDates);
   const lastDate=parseISOLocal(periodDates[periodDates.length-1]);
   const rawDaysSince=Math.floor((today-lastDate)/86400000);
-  const dayInCycle=(rawDaysSince%len)+1;
+  // Cap at len — don't wrap into a new cycle until she logs a new period
+  const dayInCycle=Math.min(rawDaysSince+1, len);
   const phase=getPhase(dayInCycle,len);
   const tip=getDayTip(phase);
   const onPeriod=phase.name==="Menstrual";
@@ -578,7 +579,7 @@ function render(periodDates,signalDates,symptomDates,feelingsMap,sexDates) {
     : phase.name === 'Luteal'      ? 'phase-luteal'
     : 'phase-lateluteal';
 
-  const nextPeriodDay=len-rawDaysSince%len;
+  const nextPeriodDay=Math.max(len-rawDaysSince, 0);
   const nextPeriodStr=new Date(today.getTime()+nextPeriodDay*86400000).toLocaleDateString('en-US',{month:'short',day:'numeric'});
   const daysToOv=(len-14)-dayInCycle;
   // Build a map of date -> feelings for day summary

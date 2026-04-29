@@ -280,8 +280,9 @@ async function fetchData() {
     const feelingsMap = {};
     if (json.feelingsMap) Object.assign(feelingsMap, json.feelingsMap);
     const normSex = (json.sexDates||[]).map(d => { const p=parseISOLocal(d); return p?toISO(p):null; }).filter(Boolean);
-    return { periodDates:(json.periodDates||[]).sort(), signalDates:(json.signalDates||[]).sort(), symptomDates:normSymptom.sort(), feelingsMap, sexDates:normSex.sort() };
-  } catch(e) { return { periodDates:[...PERIOD_DATES_FB].sort(), signalDates:[...SIGNAL_DATES_FB].sort(), symptomDates:[], feelingsMap:{}, sexDates:[...SEX_DATES_FB].sort() }; }
+    const normPeriodEnd = (json.periodEndDates||[]).map(d => { const p=parseISOLocal(d); return p?toISO(p):null; }).filter(Boolean);
+    return { periodDates:(json.periodDates||[]).sort(), signalDates:(json.signalDates||[]).sort(), symptomDates:normSymptom.sort(), feelingsMap, sexDates:normSex.sort(), periodEndDates:normPeriodEnd.sort() };
+  } catch(e) { return { periodDates:[...PERIOD_DATES_FB].sort(), signalDates:[...SIGNAL_DATES_FB].sort(), symptomDates:[], feelingsMap:{}, sexDates:[...SEX_DATES_FB].sort(), periodEndDates:[] }; }
 }
 async function writeEntry(action,dateStr) {
   const res=await fetch(SCRIPT_URL+'?action='+action+'&date='+encodeURIComponent(dateStr)+'&t='+Date.now());
@@ -294,7 +295,7 @@ let calOffset=0, appState=null;
 const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
 const DOWS=["Su","Mo","Tu","We","Th","Fr","Sa"];
 
-function buildCalendar(periodDates,signalDates,symptomDates,feelingsMap,sexDates,len,offset) {
+function buildCalendar(periodDates,signalDates,symptomDates,feelingsMap,sexDates,periodEndDates,len,offset) {
   const today=new Date();
   const dt=new Date(today.getFullYear(),today.getMonth()+offset,1);
   const month=dt.getMonth(), year=dt.getFullYear();
@@ -304,6 +305,7 @@ function buildCalendar(periodDates,signalDates,symptomDates,feelingsMap,sexDates
   const signalSet=new Set(signalDates);
   const symptomSet=new Set(symptomDates);
   const sexSet=new Set(sexDates||[]);
+  const periodEndSet=new Set(periodEndDates||[]);
   const FEELING_PRIORITY = ['Horny','Affectionate','Bloated','Cramping','Emotional','Tired','Happy'];
   function getSymptomEmoji(iso) {
     const raw = feelingsMap && feelingsMap[iso];
@@ -332,10 +334,13 @@ function buildCalendar(periodDates,signalDates,symptomDates,feelingsMap,sexDates
     // Historical dates before last period: check against all logged periods
     const daysSinceLastPeriod = Math.floor((d - lastPeriod) / 86400000);
     if (daysSinceLastPeriod < 0) {
-      for (const pd of periodDates) {
-        const p = parseISOLocal(pd);
+      for (let pi = 0; pi < periodDates.length; pi++) {
+        const p = parseISOLocal(periodDates[pi]);
         const diff = Math.floor((d - p) / 86400000);
-        if (diff >= 0 && diff <= 4) return 'period';
+        // Use logged end date if available, else assume 5 days
+        const endDate = periodEndDates && periodEndDates[pi] ? parseISOLocal(periodEndDates[pi]) : null;
+        const maxDiff = endDate ? Math.floor((endDate - p) / 86400000) : 4;
+        if (diff >= 0 && diff <= maxDiff) return 'period';
       }
       // For days between periods, calculate cycle day from nearest prior period
       let nearestPrior = null;
@@ -369,7 +374,11 @@ function buildCalendar(periodDates,signalDates,symptomDates,feelingsMap,sexDates
       cycD = (daysSinceAnchor % len) + 1;
     }
 
-    if (cycD <= 5) return 'period';
+    // Use logged end date for current cycle if available
+    const lastEndISO = periodEndDates && periodEndDates.length ? periodEndDates[periodEndDates.length-1] : null;
+    const lastEndDate = lastEndISO ? parseISOLocal(lastEndISO) : null;
+    const periodEndDay = lastEndDate ? Math.floor((lastEndDate - lastPeriod) / 86400000) + 1 : 5;
+    if (cycD >= 1 && cycD <= periodEndDay) return 'period';
     if (cycD >= ovulationDay - 2 && cycD <= ovulationDay) return 'ovulation';
     if (cycD >= ovulationDay - 5 && cycD < ovulationDay - 2) return 'fertile';
     const pct = cycD / len;
@@ -405,7 +414,7 @@ function buildCalendar(periodDates,signalDates,symptomDates,feelingsMap,sexDates
 
 function changeMonth(dir) {
   calOffset+=dir;
-  document.getElementById('calContainer').innerHTML=buildCalendar(appState.periodDates,appState.signalDates,appState.symptomDates,appState.feelingsMap,appState.sexDates,appState.len,calOffset);
+  document.getElementById('calContainer').innerHTML=buildCalendar(appState.periodDates,appState.signalDates,appState.symptomDates,appState.feelingsMap,appState.sexDates,appState.periodEndDates,appState.len,calOffset);
 }
 
 
@@ -602,7 +611,7 @@ function dismissSummary(lastISO) {
   if (el) el.remove();
 }
 
-function render(periodDates,signalDates,symptomDates,feelingsMap,sexDates) {
+function render(periodDates,signalDates,symptomDates,feelingsMap,sexDates,periodEndDates) {
   const today=new Date();
   const len=avgCycleLen(periodDates);
   const lastDate=parseISOLocal(periodDates[periodDates.length-1]);
@@ -629,7 +638,7 @@ function render(periodDates,signalDates,symptomDates,feelingsMap,sexDates) {
   const nextPeriodStr=new Date(today.getTime()+nextPeriodDay*86400000).toLocaleDateString('en-US',{month:'short',day:'numeric'});
   const daysToOv=(len-14)-dayInCycle;
   // Build a map of date -> feelings for day summary
-  appState={periodDates,signalDates,symptomDates,feelingsMap:feelingsMap||{},sexDates:sexDates||[],len};
+  appState={periodDates,signalDates,symptomDates,feelingsMap:feelingsMap||{},sexDates:sexDates||[],periodEndDates:periodEndDates||[],periodConfirmed,len};
 
   // Schedule period reminder if 3 days out
   const nextPeriodDayForNotif = len - rawDaysSince % len;
@@ -704,7 +713,7 @@ function render(periodDates,signalDates,symptomDates,feelingsMap,sexDates) {
     +'</div></div>'
 
     +'<div class="section"><div class="section-title">Your calendar</div>'
-    +'<div class="cal-wrap"><div id="calContainer">'+buildCalendar(periodDates,signalDates,symptomDates,feelingsMap,sexDates,len,0)+'</div></div></div>'
+    +'<div class="cal-wrap"><div id="calContainer">'+buildCalendar(periodDates,signalDates,symptomDates,feelingsMap,sexDates,periodEndDates,len,0)+'</div></div></div>'
 
     +'<button class="log-btn" onclick="haptic(\'light\');openLog()">🩸 Log period start</button>'
     +'<button class="log-btn" onclick="haptic(\'light\');openSymptom()" style="margin-top:0.75rem;background:linear-gradient(135deg,#5FA67A,#3d8a5e);">📝 Log a symptom</button>'
@@ -765,6 +774,15 @@ function tapDay(iso) {
   showModal(dateStr, phase.emoji + ' Day ' + cycleDay + ' of ' + len + ' | ' + phase.name, body);
 }
 function openLog() {
+  const { periodDates, periodEndDates, periodConfirmed } = appState || {};
+  // Detect if she is currently on her period (confirmed) and no end logged for this cycle yet
+  const lastPeriodISO = periodDates && periodDates.length ? periodDates[periodDates.length-1] : null;
+  const lastEndISO = periodEndDates && periodEndDates.length ? periodEndDates[periodEndDates.length-1] : null;
+  const lastPeriodDate = lastPeriodISO ? parseISOLocal(lastPeriodISO) : null;
+  const lastEndDate = lastEndISO ? parseISOLocal(lastEndISO) : null;
+  const endAlreadyLogged = lastEndDate && lastPeriodDate && lastEndDate >= lastPeriodDate;
+  const isLoggingEnd = periodConfirmed && !endAlreadyLogged;
+
   const today = new Date();
   const days = [];
   for (let i = 0; i < 3; i++) {
@@ -774,11 +792,20 @@ function openLog() {
       d.toLocaleDateString('en-US', { weekday:'long', month:'short', day:'numeric' });
     days.push({ iso, label });
   }
-  showModal('Log period start', 'When did it start?',
-    days.map(d =>
-      '<button class="mbtn" onclick="openLogForDate(\''+d.iso+'\''+')" style="background:var(--mist);border:1px solid var(--border);color:var(--ink);text-align:left;padding:13px 16px;">'
-      + d.label + '</button>'
-    ).join('') + '<button class="mbtn cancel" onclick="closeModal()" style="margin-top:4px">Cancel</button>');
+
+  if (isLoggingEnd) {
+    showModal('Log period end', 'When did it end?',
+      days.map(d =>
+        '<button class="mbtn" onclick="submitLog(\'periodend\',\''+d.iso+'\''+')" style="background:var(--mist);border:1px solid var(--border);color:var(--ink);text-align:left;padding:13px 16px;">'
+        + d.label + '</button>'
+      ).join('') + '<button class="mbtn cancel" onclick="closeModal()" style="margin-top:4px">Cancel</button>');
+  } else {
+    showModal('Log period start', 'When did it start?',
+      days.map(d =>
+        '<button class="mbtn" onclick="openLogForDate(\''+d.iso+'\''+')" style="background:var(--mist);border:1px solid var(--border);color:var(--ink);text-align:left;padding:13px 16px;">'
+        + d.label + '</button>'
+      ).join('') + '<button class="mbtn cancel" onclick="closeModal()" style="margin-top:4px">Cancel</button>');
+  }
 }
 
 function openLogForDate(iso) {
@@ -1014,7 +1041,10 @@ async function submitLog(action,iso) {
   modalMsg(action==='signal'?"Sending. He's going to love it! 💜":'Saving...');
   try {
     await writeEntry(action,iso);
-    if(action==='signal') {
+    if(action==='periodend') {
+      modalMsg('Period end logged.','ok');
+      setTimeout(()=>{ closeModal(); init(); },1500);
+    } else if(action==='signal') {
       modalMsg('Signal sent to Dan. 💜','ok');
       playSignalChime();
       setTimeout(()=>{ closeModal(); init(); },1500);
@@ -1307,8 +1337,8 @@ async function init() {
   closeModal();
   registerServiceWorker();
   document.getElementById('app').innerHTML='<div class="loading-wrap"><div class="spinner"></div>Loading your cycle data...</div>';
-  const {periodDates,signalDates,symptomDates,feelingsMap,sexDates}=await fetchData();
-  render(periodDates,signalDates,symptomDates,feelingsMap,sexDates);
+  const {periodDates,signalDates,symptomDates,feelingsMap,sexDates,periodEndDates}=await fetchData();
+  render(periodDates,signalDates,symptomDates,feelingsMap,sexDates,periodEndDates);
   // Load weather after render so page isn't blocked
   fetchWeather().then(weather => {
     const card = document.getElementById('weatherCard');
